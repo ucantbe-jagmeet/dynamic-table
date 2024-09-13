@@ -1,88 +1,157 @@
+// tableSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "./store";
 
 type ColumnType = "string" | "number";
 
 interface Column {
-  id: string;
-  name: string;
-  type: ColumnType;
+  key: string;
+  title: string;
+  dataType: ColumnType;
+  dataIndex: string;
 }
 
 interface Row {
-  id: string;
-  [key: string]: any; 
+  key: string;
+  [key: string]: string | number | string[];
 }
 
 interface TableState {
   columns: Column[];
   rows: Row[];
+  filteredRows: Row[];
 }
 
-const initialState: TableState = {
-  columns: [],
-  rows: [],
+const loadStateFromLocalStorage = (): TableState => {
+  try {
+    const serializedState = localStorage.getItem("tableData");
+    if (serializedState === null) {
+      return { columns: [], rows: [], filteredRows: [] };
+    }
+    const parsedState = JSON.parse(serializedState);
+    return { ...parsedState, filteredRows: parsedState.rows };
+  } catch (err) {
+    console.error("Could not load state from localStorage", err);
+    return { columns: [], rows: [], filteredRows: [] };
+  }
 };
+
+const saveStateToLocalStorage = (state: TableState) => {
+  try {
+    const serializedState = JSON.stringify(state);
+    localStorage.setItem("tableData", serializedState);
+  } catch (err) {
+    console.error("Could not save state to localStorage", err);
+  }
+};
+
+const initialState: TableState = loadStateFromLocalStorage();
 
 const tableSlice = createSlice({
   name: "table",
   initialState,
   reducers: {
-    addColumn: (
-      state,
-      action: PayloadAction<{ name: string; type: ColumnType }>
-    ) => {
-      const newColumn: Column = {
-        id: Math.random().toString(36).substring(7),
-        name: action.payload.name,
-        type: action.payload.type,
-      };
-      state.columns.push(newColumn);
+    addColumn: (state, action: PayloadAction<Column>) => {
+      state.columns.push(action.payload);
+      saveStateToLocalStorage(state);
     },
-    addRow: (state) => {
-      const newRow: Row = {
-        id: Math.random().toString(36).substring(7),
-      };
-      state.rows.push(newRow);
+    addRow: (state, action: PayloadAction<Row>) => {
+      state.rows.push(action.payload);
+      state.filteredRows = state.rows;
+      saveStateToLocalStorage(state);
+    },
+    deleteRow: (state, action: PayloadAction<string>) => {
+      state.rows = state.rows.filter((row) => row.key !== action.payload);
+      state.filteredRows = state.rows;
+      saveStateToLocalStorage(state);
     },
     updateCell: (
       state,
-      action: PayloadAction<{ rowId: string; columnName: string; value: any }>
+      action: PayloadAction<{ rowIndex: number; colKey: string; value: any }>
     ) => {
-      const { rowId, columnName, value } = action.payload;
-      const row = state.rows.find((r) => r.id === rowId);
-      if (row) {
-        row[columnName] = value;
-      }
+      const { rowIndex, colKey, value } = action.payload;
+      state.rows[rowIndex][colKey] = value;
+      state.filteredRows = state.rows;
+      saveStateToLocalStorage(state);
     },
     filterRows: (
       state,
-      action: PayloadAction<{ columnName: string; filterValue: any }>
+      action: PayloadAction<{ columnKey: string; criteria: any }>
     ) => {
-      const { columnName, filterValue } = action.payload;
-      state.rows = state.rows.filter((row) =>
-        Array.isArray(row[columnName])
-          ? row[columnName].includes(filterValue)
-          : row[columnName] === filterValue
-      );
+      const { columnKey, criteria } = action.payload;
+      const { type, value } = criteria;
+
+      const column = state.columns.find((col) => col.key === columnKey);
+      if (!column) return;
+
+      switch (column.dataType) {
+        case "string":
+          state.filteredRows = state.rows.filter((row) => {
+            const cellValue = row[columnKey];
+            if (typeof cellValue === "string") {
+              switch (type) {
+                case "contains":
+                  return cellValue.toLowerCase().includes(value.toLowerCase());
+                case "notContains":
+                  return !cellValue.toLowerCase().includes(value.toLowerCase());
+                default:
+                  return true;
+              }
+            } else if (Array.isArray(cellValue)) {
+              switch (type) {
+                case "contains":
+                  return cellValue.some((item) =>
+                    item.toLowerCase().includes(value.toLowerCase())
+                  );
+                case "notContains":
+                  return !cellValue.some((item) =>
+                    item.toLowerCase().includes(value.toLowerCase())
+                  );
+                default:
+                  return true;
+              }
+            }
+            return true;
+          });
+          break;
+        case "number":
+          state.filteredRows = state.rows.filter((row) => {
+            const cellValue = row[columnKey];
+            if (typeof cellValue === "number") {
+              switch (type) {
+                case "lessThan":
+                  return cellValue < value;
+                case "greaterThan":
+                  return cellValue > value;
+                case "equalTo":
+                  return cellValue === value;
+                default:
+                  return true;
+              }
+            }
+            return true;
+          });
+          break;
+        default:
+          break;
+      }
     },
-    sortRows: (
-      state,
-      action: PayloadAction<{ columnName: string; order: "asc" | "desc" }>
-    ) => {
-      const { columnName, order } = action.payload;
-      state.rows.sort((a, b) => {
-        if (a[columnName] === undefined || b[columnName] === undefined)
-          return 0;
-        if (order === "asc") {
-          return a[columnName] > b[columnName] ? 1 : -1;
-        } else {
-          return a[columnName] < b[columnName] ? 1 : -1;
-        }
-      });
+    resetFilters: (state) => {
+      state.filteredRows = state.rows; 
     },
   },
 });
 
-export const { addColumn, addRow, updateCell, filterRows, sortRows } =
-  tableSlice.actions;
+export const {
+  addColumn,
+  addRow,
+  deleteRow,
+  updateCell,
+  filterRows,
+  resetFilters,
+} = tableSlice.actions;
+
+export const selectColumns = (state: RootState) => state.table.columns;
+export const selectRows = (state: RootState) => state.table.filteredRows; 
+
 export default tableSlice.reducer;
