@@ -1,16 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Table,
-  Button,
-  Select,
-  Form,
-  Space,
-  Tag,
-} from "antd";
-import {
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { Table, Button, Select, Form, Space, Tag } from "antd";
+import { DeleteOutlined, FilterOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../redux/store";
 import { openModal, closeModal } from "../redux/modalSlice";
@@ -19,7 +10,8 @@ import {
   CreateColumnModal,
   EditTextModal,
   CreateRowModal,
-} from "./modals"; 
+  FilterModal,
+} from "./modals";
 
 type ColumnType = "string" | "number";
 
@@ -32,13 +24,18 @@ interface Column {
 
 interface Row {
   key: string;
-  [key: string]: string | number | string[]; 
+  [key: string]: string | number | string[];
 }
 
 const DynamicTable: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
-  const { createColumnModal, editTextModal, deleteRowModal, createRowModal } =
-    useSelector((state: RootState) => state.modal);
+  const {
+    createColumnModal,
+    editTextModal,
+    deleteRowModal,
+    createRowModal,
+    filterModal,
+  } = useSelector((state: RootState) => state.modal);
 
   const [columns, setColumns] = useState<Column[]>([
     {
@@ -81,14 +78,17 @@ const DynamicTable: React.FC = () => {
     },
   ]);
 
+  const [filteredDataSource, setFilteredDataSource] =
+    useState<Row[]>(dataSource); // State to store filtered data
   const [form] = Form.useForm();
   const [editingCell, setEditingCell] = useState<{
     rowIndex: number;
     colKey: string;
   } | null>(null);
   const [editValue, setEditValue] = useState<string[]>([""]);
-  const [editNumberValue, setEditNumberValue] = useState<number | null>(null); 
-  const [rowToDelete, setRowToDelete] = useState<string | null>(null); 
+  const [editNumberValue, setEditNumberValue] = useState<number | null>(null);
+  const [rowToDelete, setRowToDelete] = useState<string | null>(null);
+  const [filterColumn, setFilterColumn] = useState<string | null>(null);
 
   const handleAddColumn = (values: {
     columnName: string;
@@ -110,11 +110,14 @@ const DynamicTable: React.FC = () => {
       ...newRowData,
     };
     setDataSource([...dataSource, newRow]);
+    setFilteredDataSource([...filteredDataSource, newRow]); // Update filtered data source as well
   };
 
   const handleDeleteRow = () => {
     if (rowToDelete) {
-      setDataSource(dataSource.filter((item) => item.key !== rowToDelete));
+      const updatedData = dataSource.filter((item) => item.key !== rowToDelete);
+      setDataSource(updatedData);
+      setFilteredDataSource(updatedData); // Update filtered data source as well
       dispatch(closeModal("deleteRowModal"));
       setRowToDelete(null);
     }
@@ -124,6 +127,7 @@ const DynamicTable: React.FC = () => {
     const updatedData = [...dataSource];
     updatedData[rowIndex][colKey] = value;
     setDataSource(updatedData);
+    setFilteredDataSource(updatedData); // Update filtered data source as well
     dispatch(closeModal("editTextModal"));
   };
 
@@ -148,7 +152,7 @@ const DynamicTable: React.FC = () => {
                 colKey: column.dataIndex,
               });
               if (column.dataType === "number") {
-                setEditNumberValue(Number(item)); 
+                setEditNumberValue(Number(item));
               } else {
                 setEditValue(
                   filteredDisplayValue.length > 0 ? filteredDisplayValue : [""]
@@ -157,15 +161,14 @@ const DynamicTable: React.FC = () => {
               dispatch(openModal("editTextModal"));
             }}
             style={{
-              color: "black", 
-              backgroundColor: "transparent", 
-              border: "1px solid #d9d9d9", 
+              color: "black",
+              backgroundColor: "transparent",
+              border: "1px solid #d9d9d9",
             }}
           >
             {item}
           </Tag>
         ))}
-        {/* Render a "+" button if no tags are present */}
         {filteredDisplayValue.length === 0 && (
           <Button
             type="link"
@@ -184,6 +187,86 @@ const DynamicTable: React.FC = () => {
       </>
     );
   };
+
+  // Handle filter logic
+const handleFilter = (columnKey: string, criteria: any) => {
+  const { type, value } = criteria;
+  let filteredData: Row[] = [...dataSource];
+
+  const column = columns.find((col) => col.key === columnKey);
+  if (!column) return; // Exit if the column is not found
+
+  console.log("creteria", criteria);
+  
+  switch (column.dataType) {
+    case "string":
+      filteredData = dataSource.filter((row) => {
+        const cellValue = row[columnKey]; // Could be string or string[]
+
+        if (typeof cellValue === "string") {
+          // Handle string filtering
+          switch (type) {
+            case "contains":
+              return cellValue.toLowerCase().includes(value.toLowerCase());
+            case "notContains":
+              return !cellValue.toLowerCase().includes(value.toLowerCase());
+            case "some":
+              return cellValue
+                .split(",")
+                .some(
+                  (item) => item.trim().toLowerCase() === value.toLowerCase()
+                );
+            default:
+              return true;
+          }
+        } else if (Array.isArray(cellValue)) {
+          // Handle array filtering (e.g., ingredients)
+          switch (type) {
+            case "contains":
+              return cellValue.some((item) =>
+                item.toLowerCase().includes(value.toLowerCase())
+              );
+            case "notContains":
+              return !cellValue.some((item) =>
+                item.toLowerCase().includes(value.toLowerCase())
+              );
+            default:
+              return true;
+          }
+        }
+        return true;
+      });
+      break;
+
+    case "number":
+      filteredData = dataSource.filter((row) => {
+        const cellValue = row[columnKey];
+
+        if (typeof cellValue === "number") {
+          // Handle number filtering
+          switch (type) {
+            case "lessThan":
+              return cellValue < value;
+            case "greaterThan":
+              return cellValue > value;
+            case "equalTo":
+              return cellValue === value;
+            default:
+              return true; // Keep all data if no valid type is provided
+          }
+        }
+        return true; // If type doesn't match, return all rows
+      });
+      break;
+
+    default:
+      break;
+  }
+
+  setFilteredDataSource(filteredData); // Update the filtered data source state
+};
+
+
 
   return (
     <div>
@@ -204,6 +287,19 @@ const DynamicTable: React.FC = () => {
             ...col,
             render: (text: any, record: Row) =>
               renderEditableCell(text, record, col),
+            title: (
+              <Space>
+                {col.title}
+                <Button
+                  icon={<FilterOutlined />}
+                  size="small"
+                  onClick={() => {
+                    setFilterColumn(col.key); // Set the column to filter
+                    dispatch(openModal("filterModal"));
+                  }}
+                />
+              </Space>
+            ),
           })),
           {
             title: "Action",
@@ -221,10 +317,10 @@ const DynamicTable: React.FC = () => {
             ),
           },
         ]}
-        dataSource={dataSource}
+        dataSource={filteredDataSource}
         pagination={{ pageSize: 10 }}
         style={{ marginTop: "16px" }}
-        rowClassName={() => "dynamic-row"} 
+        rowClassName={() => "dynamic-row"}
       />
 
       {/* Create Column Modal */}
@@ -260,6 +356,17 @@ const DynamicTable: React.FC = () => {
         visible={createRowModal}
         columns={columns}
         handleAddRow={handleAddRow}
+        dispatch={dispatch}
+      />
+
+      {/* Filter Modal */}
+      <FilterModal
+        visible={filterModal}
+        columnType={
+          columns.find((col) => col.key === filterColumn)?.dataType ?? "string"
+        }
+        columnKey={filterColumn ?? ""}
+        handleFilter={handleFilter}
         dispatch={dispatch}
       />
     </div>
