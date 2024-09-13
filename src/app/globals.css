@@ -2,3 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+
+.dynamic-row .ant-table-cell {
+  white-space: normal !important; /* Allow cells to wrap text */
+  word-break: break-word; /* Break words if they are too long */
+  vertical-align: top; /* Align content to the top */
+  max-width: 320px;
+}
