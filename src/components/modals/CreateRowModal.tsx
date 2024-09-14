@@ -35,7 +35,7 @@ const CreateRowModal: React.FC<CreateRowModalProps> = ({
   return (
     <Modal
       title="Create New Row"
-      visible={visible}
+      open={visible}
       onOk={form.submit}
       onCancel={() => dispatch(closeModal("createRowModal"))}
       okText="Save"

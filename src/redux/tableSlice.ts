@@ -23,17 +23,20 @@ interface TableState {
 }
 
 const loadStateFromLocalStorage = (): TableState => {
-  try {
-    const serializedState = localStorage.getItem("tableData");
-    if (serializedState === null) {
+    if (typeof window === "undefined") {
       return { columns: [], rows: [], filteredRows: [] };
     }
-    const parsedState = JSON.parse(serializedState);
-    return { ...parsedState, filteredRows: parsedState.rows };
-  } catch (err) {
-    console.error("Could not load state from localStorage", err);
-    return { columns: [], rows: [], filteredRows: [] };
-  }
+    try {
+      const serializedState = localStorage.getItem("tableData");
+      if (serializedState === null) {
+        return { columns: [], rows: [], filteredRows: [] };
+      }
+      const parsedState = JSON.parse(serializedState);
+      return { ...parsedState, filteredRows: parsedState.rows };
+    } catch (err) {
+      console.error("Could not load state from localStorage", err);
+      return { columns: [], rows: [], filteredRows: [] };
+    }
 };
 
 const saveStateToLocalStorage = (state: TableState) => {

@@ -29,7 +29,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   return (
     <Modal
       title={`Filter ${columnKey}`}
-      visible={visible}
+      open={visible}
       onOk={applyFilter}
       onCancel={() => dispatch(closeModal("filterModal"))}
       okText="Apply"

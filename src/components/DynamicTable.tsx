@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Table, Button, Space, Tag, Form } from "antd";
 import { DeleteOutlined, FilterOutlined } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
@@ -60,6 +60,10 @@ const DynamicTable: React.FC = () => {
   const [editNumberValue, setEditNumberValue] = useState<number | null>(null);
   const [rowToDelete, setRowToDelete] = useState<string | null>(null);
 
+    const [isLoading, setIsLoading] = useState(false);
+
+
+
   const handleAddColumn = (values: {
     columnName: string;
     columnType: ColumnType;
@@ -104,6 +108,7 @@ const DynamicTable: React.FC = () => {
     const filteredDisplayValue = displayValue.filter(
       (item) => item.trim() !== ""
     );
+
 
     return (
       <>
@@ -161,6 +166,13 @@ const DynamicTable: React.FC = () => {
     dispatch(resetFilters()); 
   };
 
+  useEffect(() => {
+        setIsLoading(!isLoading);
+  }, []);
+
+  if (!isLoading) {
+    return <div>Loading...</div>;
+  }
   return (
     <div>
       <h2>Skin Care Catalog</h2>

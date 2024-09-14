@@ -26,7 +26,7 @@ const CreateColumnModal: React.FC<CreateColumnModalProps> = ({
   return (
     <Modal
       title="Create Column"
-      visible={visible}
+      open={visible}
       onOk={form.submit} 
       onCancel={() => dispatch(closeModal("createColumnModal"))} 
       okText="Create"

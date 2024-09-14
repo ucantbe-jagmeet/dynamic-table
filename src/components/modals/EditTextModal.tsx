@@ -60,7 +60,7 @@ const EditTextModal: React.FC<EditTextModalProps> = ({
   return (
     <Modal
       title="Edit Cell"
-      visible={visible}
+      open={visible}
       onOk={saveChanges}
       onCancel={() => dispatch(closeModal("editTextModal"))}
       okText="Save"

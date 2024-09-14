@@ -19,7 +19,7 @@ const DeleteRowModal: React.FC<DeleteRowModalProps> = ({
   return (
     <Modal
       title="Delete Row"
-      visible={visible}
+      open={visible}
       onOk={handleDeleteRow}
       onCancel={() => dispatch(closeModal("deleteRowModal"))}
       okText="Delete"

@@ -6,6 +6,7 @@ interface ModalState {
   editTextModal: boolean;
   deleteRowModal: boolean;
   createRowModal: boolean;
+  filterModal: boolean;
 }
 
 const initialState: ModalState = {
@@ -13,6 +14,7 @@ const initialState: ModalState = {
   editTextModal: false,
   deleteRowModal: false,
   createRowModal: false,
+  filterModal: false,
 };
 
 const modalSlice = createSlice({
