@@ -22,7 +22,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const [filterType, setFilterType] = useState<string>('contains'); // Default filter type
 
   const applyFilter = () => {
-    handleFilter(columnKey, { type: filterType, value: inputValue }); // Call the filter function with criteria
+    console.log(
+      "columnKey",
+      columnKey,
+      { type: filterType, value: inputValue }
+    );
+    handleFilter(columnKey, { type: filterType, value: inputValue }); 
+    setInputValue("");
     dispatch(closeModal('filterModal')); // Close modal
   };
 

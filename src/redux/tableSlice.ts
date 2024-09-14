@@ -45,9 +45,9 @@ const predefinedRows: Row[] = [
     product_link: "link1",
     name: "facewash",
     ingredients: "aloe vera",
-    price: "190",
+    price: 190,
   },
-  { key: "2", product_link: "link2", name: "Maaza", ingredients: "mango", price: "90" },
+  { key: "2", product_link: "link2", name: "Maaza", ingredients: "mango", price: 90 },
 ];
 
 const loadStateFromLocalStorage = (): TableState => {
