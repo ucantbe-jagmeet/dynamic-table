@@ -22,17 +22,18 @@ import {
   selectColumns,
   selectRows,
 } from "../redux/tableSlice";
+import EditableCell from "./RenderEditableCell";
 
 type ColumnType = "string" | "number";
 
-interface Column {
+export interface Column {
   key: string;
   title: string;
   dataType: ColumnType;
   dataIndex: string;
 }
 
-interface Row {
+export interface Row {
   key: string;
   [key: string]: string | number | string[];
 }
@@ -189,47 +190,58 @@ const DynamicTable: React.FC = () => {
         Reset Filters
       </Button>
 
-      <Table
-        columns={[
-          ...columns.map((col: Column) => ({
-            ...col,
-            render: (text: any, record: Row) =>
-              renderEditableCell(text, record, col),
-            title: (
-              <Space>
-                {col.title}
-                <Button
-                  icon={<FilterOutlined />}
-                  size="small"
-                  onClick={() => {
-                    setFilterColumn(col.key);
-                    dispatch(openModal("filterModal"));
-                  }}
+      {!isLoading && (
+        <Table
+          columns={[
+            ...columns.map((col: Column) => ({
+              ...col,
+              render: (text: any, record: Row) => (
+                <EditableCell
+                  text={text}
+                  record={record}
+                  column={col}
+                  setEditingCell={setEditingCell}
+                  setEditValue={setEditValue}
+                  setEditNumberValue={setEditNumberValue}
+                  rows={rows}
                 />
-              </Space>
-            ),
-          })),
-          {
-            title: "Action",
-            key: "action",
-            render: (text, record: Row) => (
-              <Space size="middle">
-                <Button
-                  icon={<DeleteOutlined />}
-                  onClick={() => {
-                    setRowToDelete(record.key);
-                    dispatch(openModal("deleteRowModal"));
-                  }}
-                />
-              </Space>
-            ),
-          },
-        ]}
-        dataSource={rows} 
-        pagination={{ pageSize: 10 }}
-        style={{ marginTop: "16px" }}
-        rowClassName={() => "dynamic-row"}
-      />
+              ),
+              title: (
+                <Space>
+                  {col.title}
+                  <Button
+                    icon={<FilterOutlined />}
+                    size="small"
+                    onClick={() => {
+                      setFilterColumn(col.key);
+                      dispatch(openModal("filterModal"));
+                    }}
+                  />
+                </Space>
+              ),
+            })),
+            {
+              title: "Action",
+              key: "action",
+              render: (text, record: Row) => (
+                <Space size="middle">
+                  <Button
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                      setRowToDelete(record.key);
+                      dispatch(openModal("deleteRowModal"));
+                    }}
+                  />
+                </Space>
+              ),
+            },
+          ]}
+          dataSource={rows}
+          pagination={{ pageSize: 10 }}
+          style={{ marginTop: "16px" }}
+          rowClassName={() => "dynamic-row"}
+        />
+      )}
 
       {/* Create Column Modal */}
       <CreateColumnModal
@@ -271,7 +283,9 @@ const DynamicTable: React.FC = () => {
       <FilterModal
         visible={filterModal}
         columnType={
-          columns.find((col: { key: string | null; }) => col.key === filterColumn)?.dataType ?? "string"
+          columns.find(
+            (col: { key: string | null }) => col.key === filterColumn
+          )?.dataType ?? "string"
         }
         columnKey={filterColumn ?? ""}
         handleFilter={handleFilter}
