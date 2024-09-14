@@ -102,131 +102,137 @@ const DynamicTable: React.FC = () => {
         setIsLoading(!isLoading);
   }, []);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
   return (
     <div className="w-screen h-screen flex flex-col items-center ">
       <h2 className="font-bold text-3xl font-mono my-5">Dynamic Table</h2>
-      <div>
-        <Button onClick={() => dispatch(openModal("createColumnModal"))}>
-          Create Column
-        </Button>
-        <Button
-          onClick={() => dispatch(openModal("createRowModal"))}
-          style={{ marginLeft: "16px" }}
-        >
-          Add Row
-        </Button>
-        <Button onClick={handleResetFilters} style={{ marginLeft: "16px" }}>
-          Reset Filters
-        </Button>
-      </div>
-      <Table
-        loading={isLoading}
-        columns={[
-          ...columns.map((col: Column) => ({
-            ...col,
-            width: "min-content",
-            render: (text: any, record: Row) => (
-              <EditableCell
-                text={text}
-                record={record}
-                column={col}
-                setEditingCell={setEditingCell}
-                setEditValue={setEditValue}
-                setEditNumberValue={setEditNumberValue}
-                rows={rows}
-              />
-            ),
-            title: (
-              <div className=" flex items-center">
-                <span className=" truncate">{col.title}</span>{" "}
-                {/* Ensures title doesn't overflow */}
-                <Button
-                  icon={<FilterOutlined />}
-                  size="small"
-                  className="ml-1"
-                  onClick={() => {
-                    setFilterColumn(col.key);
-                    dispatch(openModal("filterModal"));
-                  }}
-                />
-              </div>
-            ),
-          })),
-          {
-            title: "Action",
-            key: "action",
-            render: (text, record: Row) => (
-              <Space size="middle">
-                <Button
-                  icon={<DeleteOutlined />}
-                  onClick={() => {
-                    setRowToDelete(record.key);
-                    dispatch(openModal("deleteRowModal"));
-                  }}
-                />
-              </Space>
-            ),
-          },
-        ]}
-        dataSource={rows}
-        pagination={{ pageSize: 10 }}
-        style={{ marginTop: "16px" }}
-        className="w-full lg:px-20 px-10 overflow-auto"
-        tableLayout="auto"
-        bordered
-      />
 
-      {/* Create Column Modal */}
-      <CreateColumnModal
-        visible={createColumnModal}
-        form={form}
-        handleAddColumn={handleAddColumn}
-        dispatch={dispatch}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-1/3 w-full">
+          Loading...
+        </div>
+      ) : (
+        <>
+          <div className="mb-10">
+            <Button onClick={() => dispatch(openModal("createColumnModal"))}>
+              Create Column
+            </Button>
+            <Button
+              onClick={() => dispatch(openModal("createRowModal"))}
+              style={{ marginLeft: "16px" }}
+            >
+              Add Row
+            </Button>
+            <Button onClick={handleResetFilters} style={{ marginLeft: "16px" }}>
+              Reset Filters
+            </Button>
+          </div>
+          <Table
+            loading={isLoading}
+            columns={[
+              ...columns.map((col: Column) => ({
+                ...col,
+                columnWidth:"100px",
+                render: (text: any, record: Row) => (
+                  <EditableCell
+                    text={text}
+                    record={record}
+                    column={col}
+                    setEditingCell={setEditingCell}
+                    setEditValue={setEditValue}
+                    setEditNumberValue={setEditNumberValue}
+                    rows={rows}
+                  />
+                ),
+                title: (
+                  <div className=" flex items-center ">
+                    <span className=" truncate mr-2">{col.title}</span>{" "}
+                    {/* Ensures title doesn't overflow */}
+                    <Button
+                      icon={<FilterOutlined />}
+                      size="small"
+                      className="ml-1"
+                      onClick={() => {
+                        setFilterColumn(col.key);
+                        dispatch(openModal("filterModal"));
+                      }}
+                    />
+                  </div>
+                ),
+              })),
+              {
+                title: "Action",
+                key: "action",
+                render: (text, record: Row) => (
+                  <Space size="middle">
+                    <Button
+                      icon={<DeleteOutlined />}
+                      onClick={() => {
+                        setRowToDelete(record.key);
+                        dispatch(openModal("deleteRowModal"));
+                      }}
+                    />
+                  </Space>
+                ),
+              },
+            ]}
+            dataSource={rows}
+            pagination={{ pageSize: 10 }}
+            className="w-full lg:px-20 px-10 overflow-auto"
+            tableLayout="auto"
+            size="small"
+            bordered
+          />
 
-      {/* Edit Text Modal */}
-      <EditTextModal
-        visible={editTextModal}
-        editValue={editValue}
-        editNumberValue={editNumberValue}
-        setEditValue={setEditValue}
-        setEditNumberValue={setEditNumberValue}
-        handleUpdateCell={handleUpdateCell}
-        editingCell={editingCell}
-        columns={columns}
-        dispatch={dispatch}
-      />
+          {/* Create Column Modal */}
+          <CreateColumnModal
+            visible={createColumnModal}
+            form={form}
+            handleAddColumn={handleAddColumn}
+            dispatch={dispatch}
+          />
 
-      {/* Delete Row Modal */}
-      <DeleteRowModal
-        visible={deleteRowModal}
-        handleDeleteRow={handleDeleteRow}
-        dispatch={dispatch}
-      />
+          {/* Edit Text Modal */}
+          <EditTextModal
+            visible={editTextModal}
+            editValue={editValue}
+            editNumberValue={editNumberValue}
+            setEditValue={setEditValue}
+            setEditNumberValue={setEditNumberValue}
+            handleUpdateCell={handleUpdateCell}
+            editingCell={editingCell}
+            columns={columns}
+            dispatch={dispatch}
+          />
 
-      {/* Create Row Modal */}
-      <CreateRowModal
-        visible={createRowModal}
-        columns={columns}
-        handleAddRow={handleAddRow}
-        dispatch={dispatch}
-      />
+          {/* Delete Row Modal */}
+          <DeleteRowModal
+            visible={deleteRowModal}
+            handleDeleteRow={handleDeleteRow}
+            dispatch={dispatch}
+          />
 
-      {/* Filter Modal */}
-      <FilterModal
-        visible={filterModal}
-        columnType={
-          columns.find(
-            (col: { key: string | null }) => col.key === filterColumn
-          )?.dataType ?? "string"
-        }
-        columnKey={filterColumn ?? ""}
-        handleFilter={handleFilter}
-        dispatch={dispatch}
-      />
+          {/* Create Row Modal */}
+          <CreateRowModal
+            visible={createRowModal}
+            columns={columns}
+            handleAddRow={handleAddRow}
+            dispatch={dispatch}
+          />
+
+          {/* Filter Modal */}
+          <FilterModal
+            visible={filterModal}
+            columnType={
+              columns.find(
+                (col: { key: string | null }) => col.key === filterColumn
+              )?.dataType ?? "string"
+            }
+            columnKey={filterColumn ?? ""}
+            handleFilter={handleFilter}
+            dispatch={dispatch}
+          />
+        </>
+      )}
     </div>
   );
 };

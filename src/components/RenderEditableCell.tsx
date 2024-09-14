@@ -56,7 +56,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
             }
             dispatch(openModal("editTextModal"));
           }}
-          className="inline-block w-full text-black bg-transparent border border-gray-300  break-words whitespace-pre-wrap max-w-full "
+          className="inline-block w-fit text-black bg-transparent border border-gray-300  break-words whitespace-pre-wrap max-w-72 "
         >
           {item}
         </Tag>
