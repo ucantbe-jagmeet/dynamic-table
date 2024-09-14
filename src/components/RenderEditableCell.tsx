@@ -1,4 +1,3 @@
-// EditableCell.tsx
 import React from "react";
 import { Button, Tag } from "antd";
 import { useDispatch } from "react-redux";
@@ -38,12 +37,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
     ? (record[column.dataIndex] as string[])
     : [record[column.dataIndex]?.toString() ?? ""];
 
-  const filteredDisplayValue = displayValue.filter(
-    (item) => item.trim() !== ""
-  );
+  const filteredDisplayValue = displayValue.filter((item) => item.trim() !== "");
 
   return (
-    <>
+    <div className="gap-1 flex flex-col   break-words whitespace-normal">
       {filteredDisplayValue.map((item, index) => (
         <Tag
           key={index}
@@ -55,17 +52,11 @@ const EditableCell: React.FC<EditableCellProps> = ({
             if (columnType === "number") {
               setEditNumberValue(Number(item));
             } else {
-              setEditValue(
-                filteredDisplayValue.length > 0 ? filteredDisplayValue : [""]
-              );
+              setEditValue(filteredDisplayValue.length > 0 ? filteredDisplayValue : [""]);
             }
             dispatch(openModal("editTextModal"));
           }}
-          style={{
-            color: "black",
-            backgroundColor: "transparent",
-            border: "1px solid #d9d9d9",
-          }}
+          className="inline-block w-full text-black bg-transparent border border-gray-300  break-words whitespace-pre-wrap max-w-full "
         >
           {item}
         </Tag>
@@ -78,7 +69,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
               rowIndex: rows.indexOf(record),
               colKey: column.dataIndex,
             });
-            columnType === "number" ? setEditNumberValue(0) : setEditValue([""])
+            columnType === "number" ? setEditNumberValue(0) : setEditValue([""]);
             dispatch(openModal("editTextModal"));
           }}
           className="text-[12px]"
@@ -86,7 +77,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
           {columnType === "number" ? "Add Num" : "Add Text"}
         </Button>
       )}
-    </>
+    </div>
   );
 };
 

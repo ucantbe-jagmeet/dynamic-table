@@ -106,7 +106,7 @@ const DynamicTable: React.FC = () => {
     return <div>Loading...</div>;
   }
   return (
-    <div className="w-screen h-screen flex flex-col items-center overflow-x-hidden">
+    <div className="w-screen h-screen flex flex-col items-center ">
       <h2 className="font-bold text-3xl font-mono my-5">Dynamic Table</h2>
       <div>
         <Button onClick={() => dispatch(openModal("createColumnModal"))}>
@@ -123,10 +123,11 @@ const DynamicTable: React.FC = () => {
         </Button>
       </div>
       <Table
+        loading={isLoading}
         columns={[
           ...columns.map((col: Column) => ({
             ...col,
-            width: 'max-content',
+            width: "min-content",
             render: (text: any, record: Row) => (
               <EditableCell
                 text={text}
@@ -139,17 +140,19 @@ const DynamicTable: React.FC = () => {
               />
             ),
             title: (
-              <Space>
-                {col.title}
+              <div className=" flex items-center">
+                <span className=" truncate">{col.title}</span>{" "}
+                {/* Ensures title doesn't overflow */}
                 <Button
                   icon={<FilterOutlined />}
                   size="small"
+                  className="ml-1"
                   onClick={() => {
                     setFilterColumn(col.key);
                     dispatch(openModal("filterModal"));
                   }}
                 />
-              </Space>
+              </div>
             ),
           })),
           {
@@ -171,8 +174,9 @@ const DynamicTable: React.FC = () => {
         dataSource={rows}
         pagination={{ pageSize: 10 }}
         style={{ marginTop: "16px" }}
-        rowClassName={() => "dynamic-row"}
-        className="w-full lg:px-20 px-10"
+        className="w-full lg:px-20 px-10 overflow-auto"
+        tableLayout="auto"
+        bordered
       />
 
       {/* Create Column Modal */}
