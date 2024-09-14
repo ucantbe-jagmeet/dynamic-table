@@ -1,17 +1,16 @@
-// tableSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "./store";
 
 type ColumnType = "string" | "number";
 
-interface Column {
+export interface Column {
   key: string;
   title: string;
   dataType: ColumnType;
   dataIndex: string;
 }
 
-interface Row {
+export interface Row {
   key: string;
   [key: string]: string | number | string[];
 }
@@ -22,21 +21,57 @@ interface TableState {
   filteredRows: Row[];
 }
 
+// Predefined columns and rows based on the provided images
+const predefinedColumns: Column[] = [
+  {
+    key: "product_link",
+    title: "PRODUCT LINK",
+    dataType: "string",
+    dataIndex: "product_link",
+  },
+  { key: "name", title: "NAME", dataType: "string", dataIndex: "name" },
+  {
+    key: "ingredients",
+    title: "INGREDIENTS",
+    dataType: "string",
+    dataIndex: "ingredients",
+  },
+  { key: "price", title: "PRICE", dataType: "number", dataIndex: "price" },
+];
+
+const predefinedRows: Row[] = [
+  {
+    key: "1",
+    product_link: "link1",
+    name: "facewash",
+    ingredients: "aloe vera",
+    price: "190",
+  },
+  { key: "2", product_link: "link2", name: "Maaza", ingredients: "mango", price: "90" },
+];
+
 const loadStateFromLocalStorage = (): TableState => {
-    if (typeof window === "undefined") {
-      return { columns: [], rows: [], filteredRows: [] };
+  if (typeof window === "undefined") {
+    return { columns: [], rows: [], filteredRows: [] };
+  }
+  try {
+    const serializedState = localStorage.getItem("tableData");
+    if (serializedState === null) {
+    
+      const initialState: TableState = {
+        columns: predefinedColumns,
+        rows: predefinedRows,
+        filteredRows: predefinedRows,
+      };
+      saveStateToLocalStorage(initialState); 
+      return initialState;
     }
-    try {
-      const serializedState = localStorage.getItem("tableData");
-      if (serializedState === null) {
-        return { columns: [], rows: [], filteredRows: [] };
-      }
-      const parsedState = JSON.parse(serializedState);
-      return { ...parsedState, filteredRows: parsedState.rows };
-    } catch (err) {
-      console.error("Could not load state from localStorage", err);
-      return { columns: [], rows: [], filteredRows: [] };
-    }
+    const parsedState = JSON.parse(serializedState);
+    return { ...parsedState, filteredRows: parsedState.rows };
+  } catch (err) {
+    console.error("Could not load state from localStorage", err);
+    return { columns: [], rows: [], filteredRows: [] };
+  }
 };
 
 const saveStateToLocalStorage = (state: TableState) => {
@@ -56,17 +91,14 @@ const tableSlice = createSlice({
   reducers: {
     addColumn: (state, action: PayloadAction<Column>) => {
       state.columns.push(action.payload);
-      saveStateToLocalStorage(state);
     },
     addRow: (state, action: PayloadAction<Row>) => {
       state.rows.push(action.payload);
       state.filteredRows = state.rows;
-      saveStateToLocalStorage(state);
     },
     deleteRow: (state, action: PayloadAction<string>) => {
       state.rows = state.rows.filter((row) => row.key !== action.payload);
       state.filteredRows = state.rows;
-      saveStateToLocalStorage(state);
     },
     updateCell: (
       state,
@@ -75,7 +107,6 @@ const tableSlice = createSlice({
       const { rowIndex, colKey, value } = action.payload;
       state.rows[rowIndex][colKey] = value;
       state.filteredRows = state.rows;
-      saveStateToLocalStorage(state);
     },
     filterRows: (
       state,
@@ -140,7 +171,7 @@ const tableSlice = createSlice({
       }
     },
     resetFilters: (state) => {
-      state.filteredRows = state.rows; 
+      state.filteredRows = state.rows;
     },
   },
 });
@@ -155,6 +186,6 @@ export const {
 } = tableSlice.actions;
 
 export const selectColumns = (state: RootState) => state.table.columns;
-export const selectRows = (state: RootState) => state.table.filteredRows; 
+export const selectRows = (state: RootState) => state.table.filteredRows;
 
 export default tableSlice.reducer;

@@ -4,7 +4,7 @@ import { Button, Tag } from "antd";
 import { useDispatch } from "react-redux";
 import { openModal } from "../redux/modalSlice";
 import { AppDispatch } from "../redux/store";
-import { Column, Row } from "./DynamicTable";
+import { Row, Column } from "../redux/tableSlice";
 
 interface EditableCellProps {
   text: any;
@@ -15,6 +15,11 @@ interface EditableCellProps {
   setEditNumberValue: (value: number | null) => void;
   rows: Row[];
 }
+
+// Utility function to determine column type
+const getColumnType = (column: Column) => {
+  return column.dataType === "number" ? "number" : "text";
+};
 
 const EditableCell: React.FC<EditableCellProps> = ({
   text,
@@ -27,6 +32,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
 }) => {
   const dispatch: AppDispatch = useDispatch();
 
+  const columnType = getColumnType(column); // Determine the column type
   const isArray = Array.isArray(record[column.dataIndex]);
   const displayValue = isArray
     ? (record[column.dataIndex] as string[])
@@ -46,7 +52,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
               rowIndex: rows.indexOf(record),
               colKey: column.dataIndex,
             });
-            if (column.dataType === "number") {
+            if (columnType === "number") {
               setEditNumberValue(Number(item));
             } else {
               setEditValue(
@@ -72,11 +78,12 @@ const EditableCell: React.FC<EditableCellProps> = ({
               rowIndex: rows.indexOf(record),
               colKey: column.dataIndex,
             });
-            setEditValue([""]);
+            columnType === "number" ? setEditNumberValue(0) : setEditValue([""])
             dispatch(openModal("editTextModal"));
           }}
+          className="text-[12px]"
         >
-          Add Text
+          {columnType === "number" ? "Add Num" : "Add Text"}
         </Button>
       )}
     </>
