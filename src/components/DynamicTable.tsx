@@ -177,7 +177,7 @@ const DynamicTable: React.FC = () => {
             ]}
             dataSource={rows}
             pagination={{ pageSize: 10 }}
-            className="w-full px-10 overflow-auto max-w-8xl"
+            className="w-full px-10 overflow-auto max-w-7xl"
             tableLayout="auto"
             size="small"
             bordered
